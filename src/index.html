@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebRSP</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="src/main.js"></script>
+  </head>
+  <body>
+    <main>
+
+      <div>
+        <label class="typeDEF">ASM</label>
+        <div id="inputASM"></div>
+        <label class="typeDEF">Log</label>
+        <pre id="log"></pre>
+        <label class="typeDEF">Emulator</label>
+        <div class="actionContainer">
+          <div>
+            <button onclick="build()">Build & Reset</button>
+            <button onclick="step(1)">Step 1</button>
+          </div>
+          <div>
+            <button onclick="step(10)">10</button>
+            <button onclick="step(100)">100</button>
+            <button onclick="step(10_000)">10K</button>
+            <button onclick="step(100_000)">100K</button>
+            <button onclick="step(1_000_000)">1M</button>
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="rightSide">
+        <div>
+          <label class="typeSTATE">State</label>
+          <div id="rspRegsCTRL">
+            <div>
+              <span class="typeSTATE">PC</span
+                ><input placeholder="00000000" id="regPC" 
+                /><span class="typeSTATE">CLK</span
+                  ><input placeholder="00000000" id="regCycle" readonly />
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="typeSU">Scalar Registers</label>
+          <div id="rspRegsSU"></div>
+        </div>
+        <div>
+          <label class="typeVU">Vector Registers</label>
+          <div id="rspRegsVU"></div>
+        </div>
+        <div>
+          <label class="typeMEM">DMEM</label>
+        </div>
+        <div class="dmemSection">
+          <div id="dmem">
+            <canvas>Here should be a HexEditor :(</canvas>
+          </div>
+        </div>
+      </div>
+    
+  </main>
+  </body>
+</html>
