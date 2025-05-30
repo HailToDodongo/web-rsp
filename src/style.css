@@ -25,7 +25,7 @@ html, body {
 }
 
 main {
-  height: 100%;
+  height: calc(100% - 32px);
   width: 100%;
   display: flex;
   flex-direction: row;
@@ -43,8 +43,40 @@ main {
   }
 
   & #log {
-    min-height: 150px;
-    max-height: 200px;
+    min-height: 153px;
+    max-height: 153px;
+  }
+}
+
+footer {
+  height: 32px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  background: rgb(36, 36, 36);
+  border: 4px solid #000;
+  color: #57b64b;
+  font-size: 14px;
+
+  gap: 20px;
+
+  & > div:first-child {
+    color: #57e444;
+  }
+
+  & a, & a:visited {
+    border: 1px solid #57b64b;
+    padding: 1px 4px;
+    cursor: pointer;
+    color: #57b64b;
+    text-decoration: none;
+  }
+  & a:hover {
+    color: #57e444;
+    border-color: #57e444;
+    text-decoration: underline;
   }
 }
 
@@ -90,8 +122,12 @@ label {
   background: rgb(214, 80, 154);
   color: #000;
 }
-.typeMEM {
-  background: rgb(214, 80, 89);
+.typeDMEM {
+  background: rgb(214, 87, 80);
+  color: #000;
+}
+.typeIMEM {
+  background: rgb(181, 181, 181);
   color: #000;
 }
 
@@ -140,7 +176,7 @@ label {
   }
 }
 
-#rspRegsVU, #rspRegsSU, #rspRegsCTRL, #dmem {
+#rspRegsVU, #rspRegsSU, #rspRegsCTRL, #dmem, #imem {
   & input {
     border: 0;
     
@@ -166,17 +202,23 @@ label {
   }
 }
 
-.dmemSection {
-  flex-grow: 1;
-  overflow-y: auto;
+.memSideBySide {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  width: 100%;
+  
+  min-height: 0;
+  flex: 1;
 
-  & > label {
-    position: sticky;
-    top: 0;
+  & > div {
+    height: 100%;
+    flex: 1;
   }
 }
 
-#dmem {
+.dmemSection {
+  flex-grow: 1;
   overflow-y: auto;
   height: 100%;
 
@@ -184,15 +226,22 @@ label {
     width: 100%;
     cursor: text;
   }
+}
 
-  & input {
-    width: 30px;
-  }
-  & input:nth-child(9), & input:nth-child(17) ,
-  & input:nth-child(25)
-  {
-    margin-right: 4px;
-  }
+#dmem, #imem {
+  overflow-y: auto;
+  height: 100%;
+}
+
+.memInput {
+  background: #222;
+  color: #fff;
+  padding: 0;
+  text-align: center;
+  border: 1px solid #444;
+  width: 24px;
+  font-family: proto, monospace;
+  height: 24px;
 }
 
 .actionContainer {

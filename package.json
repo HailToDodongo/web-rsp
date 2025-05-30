@@ -26,6 +26,6 @@
   "dependencies": {
     "ace-builds": "^1.41.0",
     "armips": "1.1.0",
-    "rsp-wasm": "1.0.2"
+    "rsp-wasm": "1.0.3"
   }
 }

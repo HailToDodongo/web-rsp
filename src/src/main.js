@@ -10,7 +10,8 @@ let elemLog;
 let inpPC;
 let inpCycle;
 let rsp;
-let hexEditor;
+let hexEditDMEM;
+let hexEditIMEM;
 
 const log = (msg) => {
   elemLog.innerText += msg + "\n";
@@ -19,14 +20,13 @@ const log = (msg) => {
 
 const hex32 = value => value.toString(16).toUpperCase().padStart(8, '0');
 const hex16 = value => value.toString(16).toUpperCase().padStart(4, '0');
-const hex8 = value => value.toString(16).toUpperCase().padStart(2, '0');
 
 const inputsSU = [];
 const inputsVU = [];
 
 
 window.step = async (steps) => {
-  const t = performance.now();
+  //const t = performance.now();
   rsp = rspStep(steps);
   inpPC.value = hex16(rsp.getPC());
   inpCycle.value = rsp.getCycles() / 3;
@@ -52,11 +52,11 @@ window.step = async (steps) => {
   }
 
   // Update UI (DMEM)
-  hexEditor.render();
-  if(steps) {
+  hexEditDMEM.render();
+  /*if(steps) {
     const elapsed = performance.now() - t;
     log(`${steps} Step | ${elapsed.toFixed(2)} ms`);
-  }
+  }*/
 };
 
 window.build = async () => {
@@ -77,6 +77,8 @@ window.build = async () => {
   }
   rsp = await rspInit(files["imem"], files["dmem"]);
   step(0);
+
+  hexEditIMEM.render();
 };
 
 async function main()
@@ -140,13 +142,38 @@ async function main()
     rspRegsVU.appendChild(cont);
   }
   
-  const canvasDMEM = document.querySelector("#dmem canvas");
-  hexEditor = new HexEditor(canvasDMEM);
+  hexEditDMEM = new HexEditor(document.querySelector("#dmem canvas"));
+  hexEditIMEM = new HexEditor(document.querySelector("#imem canvas"));
 
   await build();
 
-  hexEditor.setRSP(rsp);
-  hexEditor.render();
+  hexEditDMEM.setRSP(rsp, true);
+  hexEditDMEM.render();
+
+  hexEditIMEM.setRSP(rsp, false);
+  hexEditIMEM.render();
+
+  const footerName = document.querySelector('#footerName');
+
+  const footerAnim = () => {
+    let charIdx = 0;
+    let intId;
+    const CHARSL = ['<---->', '<●--->', '<-●-->', '<--●->', '<---●>'];
+    const CHARSR = ['<---->', '<---●>', '<--●->', '<-●-->', '<●--->'];
+
+    intId = setInterval(() => { 
+      const cl = CHARSL[(charIdx) % CHARSL.length];
+      const cr = CHARSR[(charIdx) % CHARSR.length];
+
+      footerName.innerText = cl+" WebRSP "+cr;
+      ++charIdx;
+      if(charIdx > (CHARSL.length * 4)) {
+        clearInterval(intId);
+        setTimeout(footerAnim, 10000);
+      }
+    }, 300);
+  }
+  footerAnim()
 }
 
 window.addEventListener('load', async () => {

@@ -5,7 +5,7 @@ export class HexEditor {
     
     this.getter = null;
     this.byteCount = 4096; // default size
-    this.bytesPerRow = 32;
+    this.bytesPerRow = 16;
     this.rowCount = this.byteCount / this.bytesPerRow;
     
     this.cellWidth = 26;
@@ -16,6 +16,11 @@ export class HexEditor {
     this.lastWidth = 0;
     this.lastHeight = 0;
     this.lastPixelSize = 0;
+    this.isFirstDraw = true;
+    this.rowWasZero = [];
+    for(let i = 0; i < this.rowCount; i++) {
+      this.rowWasZero[i] = false;
+    }
 
     this.strAllZeros = '';
     for(let i = 0; i < this.bytesPerRow; i++) {
@@ -29,12 +34,11 @@ export class HexEditor {
     this.input.style.position = 'absolute';
     this.input.style.display = 'none';
     this.input.style.zIndex = '10';
-    this.input.style.width = '24px';
-    this.input.style.height = '24px';
     this.input.maxLength = 2;
+    this.input.className = 'memInput';
     document.body.appendChild(this.input);
 
-    document.getElementById('dmem').addEventListener('scroll', () => {
+    canvas.parentNode.addEventListener('scroll', () => {
       this.input.style.display = 'none'; 
       this.editIndex = undefined; // Reset edit index on scroll
     });
@@ -57,17 +61,22 @@ export class HexEditor {
     this.canvas.addEventListener('click', (e) => this.onClick(e));
   }
 
-  setRSP(rsp) {
+  setRSP(rsp, isDMEM) {
     this.rsp = rsp;
+    /** @type {DataView} */
+    this.dataView = isDMEM ? rsp.DMEM : rsp.IMEM;
+    /** @type {DataView} */
+    this.isDMEM = isDMEM;
   }
 
   render() {
     if (!this.rsp) return;
     this.input.style.display = 'none';
+    
     const width = this.canvas.getBoundingClientRect().width;
     const height = this.rowCount * 20;
     const ratio = window.devicePixelRatio;
-
+    
     if(width != this.lastWidth || height != this.lastHeight || this.lastPixelSize != window.devicePixelRatio) {
       this.lastWidth = width;
       this.lastHeight = height;
@@ -78,10 +87,15 @@ export class HexEditor {
       this.canvas.style.width = width + "px";
       this.canvas.style.height = height + "px";
       this.canvas.getContext("2d").scale(ratio, ratio);
+      this.isFirstDraw = true;
     }
     
     const ctx = this.ctx;
-    ctx.clearRect(0, 0, this.canvas.width / ratio, this.canvas.height / ratio);
+    if(this.isFirstDraw) {
+      ctx.clearRect(0, 0, this.canvas.width / ratio, this.canvas.height / ratio);
+      this.rowWasZero.fill(false); // Reset row zero state on first draw
+    }
+
     ctx.font = "14px proto";
     ctx.fillStyle = "#eee";
     ctx.textAlign = "left";
@@ -91,25 +105,45 @@ export class HexEditor {
     for(let row=0; row<this.rowCount; row++) 
     {
       let posX = 8;
-      const addrTxt = "0x" + (addr).toString(16).padStart(4, '0').toUpperCase();
-      ctx.fillStyle = "#faa";
-      ctx.fillText(addrTxt, posX, posY);
+      if(this.isFirstDraw) {
+        ctx.fillStyle = this.isDMEM ? "rgb(214, 87, 80)" : "rgb(181, 181, 181)";
+        ctx.fillRect(0, posY - 15, 68, (this.cellHeight-2));
+        const addrTxt = "0x" + (addr).toString(16).padStart(4, '0').toUpperCase();
+        ctx.fillStyle = "#000";
+        ctx.fillText(addrTxt, posX, posY);  
+      }
 
       posX = this.xOffset;
 
-      const values = [];
-      let allZero = true;
-      for(let i = 0; i < this.bytesPerRow; i++) {
-        values[i] = this.rsp.readU8DMEM(addr);
-        if(values[i] !== 0) allZero = false;
-        addr++;
+      const word0 = this.dataView.getUint32(addr+0);
+      const word1 = this.dataView.getUint32(addr+4);
+      const word2 = this.dataView.getUint32(addr+8);
+      const word3 = this.dataView.getUint32(addr+12);
+      addr += 16;
+      
+      let allZero = word0 === 0 && word1 === 0 && word2 === 0 && word3 === 0;
+
+      ctx.fillStyle = "#666";
+
+      const needsClear = !allZero || !this.rowWasZero[row];
+      if(needsClear) {
+        ctx.clearRect(this.xOffset, posY - 14, this.canvas.width / window.devicePixelRatio, this.cellHeight);
       }
 
-      ctx.fillStyle = "#bbb";
-
       if(allZero) {
-        ctx.fillText(this.strAllZeros, posX, posY);
+        if(!this.rowWasZero[row]) {
+          ctx.fillText(this.strAllZeros, posX, posY);
+          this.rowWasZero[row] = true;
+        }
       } else {
+        const values = [
+          word0 & 0xFF, (word0 >> 8) & 0xFF, (word0 >> 16) & 0xFF, (word0 >> 24) & 0xFF,
+          word1 & 0xFF, (word1 >> 8) & 0xFF, (word1 >> 16) & 0xFF, (word1 >> 24) & 0xFF,
+          word2 & 0xFF, (word2 >> 8) & 0xFF, (word2 >> 16) & 0xFF, (word2 >> 24) & 0xFF,
+          word3 & 0xFF, (word3 >> 8) & 0xFF, (word3 >> 16) & 0xFF, (word3 >> 24) & 0xFF
+        ];
+
+        this.rowWasZero[row] = false;
         let strZero = '';
         let strNum = '';
 
@@ -138,7 +172,7 @@ export class HexEditor {
 
       posY += this.cellHeight;
     }
-
+    this.isFirstDraw = false;
   }
 
   posToAddress(mouseX, mouseY) {
@@ -166,7 +200,7 @@ export class HexEditor {
     let posX = this.xOffset + col * this.cellWidth;
     let spacing = Math.floor(col / 8) * 9;
     posX += spacing; // Add spacing for every 8th column
-    let posY = row * this.cellHeight;
+    let posY = row * this.cellHeight + 3;
 
     return { x: rect.left + posX, y: rect.top + posY };
   }
@@ -178,7 +212,9 @@ export class HexEditor {
     if(!pos)return;
 
     this.editIndex = address;
-    const val = this.rsp.readU8DMEM(address);
+    const val = this.isDMEM
+      ? this.rsp.dmemReadU8(address)
+      : this.rsp.imemReadU8(address);
 
     this.input.value = val.toString(16).padStart(2, '0').toUpperCase();
     this.input.style.left = `${pos.x}px`;
@@ -189,6 +225,9 @@ export class HexEditor {
   }
   
   onClick(e) {
+    if (this.input.style.display === 'block') {
+      this.commitEdit();
+    }
     const index = this.posToAddress(e.clientX, e.clientY);
     if(index < 0)return;
     this.openEdit(index);
@@ -199,7 +238,11 @@ export class HexEditor {
 
     const val = parseInt(this.input.value, 16);
     if (!isNaN(val)) {
-      this.rsp.setU8DMEM(this.editIndex, val & 0xFF);
+      if(this.isDMEM) {
+        this.rsp.dmemWriteU8(this.editIndex, val & 0xFF);
+      } else {
+        this.rsp.imemWriteU8(this.editIndex, val & 0xFF);
+      }
     }
     if(goToNext != 0) {
       this.render();

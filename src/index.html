@@ -36,7 +36,7 @@
           <div id="rspRegsCTRL">
             <div>
               <span class="typeSTATE">PC</span
-                ><input placeholder="00000000" id="regPC" 
+                ><input placeholder="00000000" id="regPC" readonly
                 /><span class="typeSTATE">CLK</span
                   ><input placeholder="00000000" id="regCycle" readonly />
             </div>
@@ -50,16 +50,32 @@
           <label class="typeVU">Vector Registers</label>
           <div id="rspRegsVU"></div>
         </div>
-        <div>
-          <label class="typeMEM">DMEM</label>
-        </div>
-        <div class="dmemSection">
-          <div id="dmem">
-            <canvas>Here should be a HexEditor :(</canvas>
+
+        <div class="memSideBySide">
+          <div>
+            <div><label class="typeDMEM">DMEM</label></div>
+            <div class="dmemSection">
+              <div id="dmem">
+                <canvas>Here should be a HexEditor :(</canvas>
+              </div>
+            </div>
+          </div>
+        
+          <div>
+            <div><label class="typeIMEM">IMEM</label></div>
+            <div class="dmemSection">
+              <div id="imem">
+                <canvas>Here should be a HexEditor :(</canvas>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    
   </main>
+  <footer>
+    <div><a target="_blank" href="https://www.youtube.com/@hailtododongo">©2025  Max Bebök (HailToDodongo)</a></div>
+    <div id="footerName">|----| WebRSP |----|</div>
+    <div><a target="_blank" href="https://github.com/HailToDodongo/web-rsp">Source Code</a></div>
+  </footer>
   </body>
 </html>
